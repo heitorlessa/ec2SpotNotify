@@ -3,6 +3,8 @@ package ec2SpotNotify
 import (
 	"fmt"
 	"github.com/parnurzeal/gorequest"
+	"log"
+	"os"
 	"time"
 )
 
@@ -12,7 +14,7 @@ const (
 	RequestFound               string        = "200 OK"
 	RequestTimeoutSeconds      time.Duration = 150 * time.Millisecond
 	URLTerminationNotification string        = "http://169.254.169.254/latest/meta-data/spot/termination-time"
-	TimeFormat                 string        = "2015-01-05T18:02:00Z"
+	TimeFormat                 string        = "2006-01-02T15:04:05Z07:00" // RFC 3339
 	TimeThresholdInterval      time.Duration = 3 * time.Second
 )
 
@@ -23,7 +25,8 @@ func GetNotificationTime() (chan time.Time, error) {
 
 	// quick error check (timeout error if not an EC2 instance)
 	if _, err := lookupInstanceMetadata(); err != nil {
-		return nil, err
+		log.Fatal(err)
+		os.Exit(1)
 	}
 
 	// run goroutine and keep it running until data is available
@@ -39,7 +42,8 @@ func GetNotificationTime() (chan time.Time, error) {
 			notification, err := lookupInstanceMetadata()
 
 			if err != nil {
-				return
+				log.Fatal(err)
+				os.Exit(1)
 			}
 
 			// data is ready! Send it over to notifyChan channel and clean up everything
@@ -58,6 +62,10 @@ func GetNotificationTime() (chan time.Time, error) {
 // While the instance is not marked for termination EC2 will return HTTP 404
 func lookupInstanceMetadata() (timestamp time.Time, err error) {
 
+	// return a Zero timestamp if termination notification is not ready
+	// ref: ref: https://golang.org/pkg/time/#Time.IsZero
+	ZeroTimestamp, _ := time.Parse(TimeFormat, string(""))
+
 	// set shorter timeout as default is way too high for this operation
 	request := gorequest.
 		New().
@@ -72,17 +80,16 @@ func lookupInstanceMetadata() (timestamp time.Time, err error) {
 
 	switch resp.Status {
 	case RequestNotFoundError:
-		// return a Zero timestamp if notification is not ready
-		// Zero timestamp ref: https://golang.org/pkg/time/#Time.IsZero
-		notification, _ := time.Parse(TimeFormat, string(""))
-		return notification, nil
+		log.Println("[-] Not found yet....")
+		return ZeroTimestamp, nil
+		fallthrough
 	case RequestFound:
-		fmt.Println("[+] Found it!!")
-		notification, _ := time.Parse(TimeFormat, string(body))
+		notification, _ := time.Parse(TimeFormat, body)
 		return notification, nil
+		fallthrough
 	default:
 		fmt.Errorf("[!] Received a non-compliant status: %s ", resp.Status)
-		return
+		return ZeroTimestamp, nil
 	}
 	return
 }
