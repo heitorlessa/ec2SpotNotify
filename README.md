@@ -18,13 +18,9 @@ This program should be able to run in both Linux and Windows platforms.
 
 - Include IAM permissions sample for Lambda and for SNS
 
-
 # TODO
  * Create Config file and read from it (it should look for SNS topic and/or binary that will be executed)
    * Read TimeThresholdTime from Config file instead of const for more flexibility
- * Create sendSNSmessage function
-   * JSONfy message to SNS
-   * Include Termination Notice timestamp and Instance ID
  * Create runCommand function
    * Execute binary/script to be called once termination notice is known (i.e clean up script, deregister from Load balancer, save work, etc)
  * Create test for package
@@ -33,7 +29,6 @@ This program should be able to run in both Linux and Windows platforms.
 
 ## Improvements
  * Make comments 'godoc' compatible so it can generate HTML if needed
- * Implement logger and replace ugly Print statements
 
 ### To fix
- * It looks like either goroutine exits and print Zero timestamp or there's a bad flow control to be revisited here after 1 hour or so
+ * none yet :)
