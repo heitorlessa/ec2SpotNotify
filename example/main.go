@@ -6,11 +6,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"log"
+	"os"
+	"strings"
 )
 
 type Config struct {
 	Region string
 	SNS
+	Err error
 }
 
 type SNS struct {
@@ -21,20 +24,15 @@ type SNS struct {
 
 func main() {
 
+	config := loadConfig()
+
 	log.Println("Looking up Instance Metadata....")
 	notification, instance, err := ec2SpotNotify.GetNotificationTime()
 	if err != nil {
 		fmt.Errorf("Ooops! Something went terribly wrong: ", err)
+	} else {
+		config.SNS.Message = instance
 	}
-
-	config := loadConfig(&Config{
-		Region: "<AWS Region>",
-		SNS: SNS{
-			Topic:   "arn:aws:sns:<region>:<accountID>:<topic>",
-			Subject: "Spot Termination notification",
-			Message: instance,
-		},
-	})
 
 	// as notification may take a while to be injected on EC2 Metadata - Read from channel provided with range
 	for timestamp := range notification {
@@ -46,21 +44,62 @@ func main() {
 	// do something about it ;)
 }
 
-// Need to implement config check + read from env if file is not present or if 'nil' passed as argument
-func loadConfig(c *Config) *Config {
+// Helper function to check whether a string is empty or not and it returns an erorr type to be evaluated against
+func isEmpty(s string) (err error) {
 
-	log.Println("Gathering configuration....")
-
-	return &Config{
-		Region: c.Region,
-		SNS: SNS{
-			Topic:   c.SNS.Topic,
-			Subject: c.SNS.Subject,
-			Message: c.SNS.Message,
-		},
+	if len(strings.TrimSpace(s)) == 0 {
+		err = fmt.Errorf("Value is empty")
 	}
+
+	return
 }
 
+// loadConfig looks up for EC2SPOT_REGION and EC2SPOT_SNS_TOPIC to ensure it can proceed without issues
+// Should these environment variables be empty it exists with a non-0 status
+func loadConfig() *Config {
+
+	config := &Config{
+		Region: "",
+		SNS: SNS{
+			Topic:   "",
+			Subject: "Spot Termination notification",
+			Message: "",
+		},
+		Err: nil,
+	}
+
+	log.Println("Gathering configuration....")
+	config.Region = os.Getenv("EC2SPOT_REGION")
+	config.SNS.Topic = os.Getenv("EC2SPOT_SNS_TOPIC")
+
+	if err := isEmpty(config.Region); err != nil {
+		config.Err = fmt.Errorf("Region cannot be empty")
+		log.Println(config.Err)
+	}
+
+	if err := isEmpty(config.SNS.Topic); err != nil {
+		config.Err = fmt.Errorf("SNS Topic cannot be empty")
+		log.Println(config.Err)
+	}
+
+	if config.Err != nil {
+		log.Fatalf("Cowardly quitting due to: %s", config.Err)
+	} else {
+		return &Config{
+			Region: config.Region,
+			SNS: SNS{
+				Topic:   config.SNS.Topic,
+				Subject: config.SNS.Subject,
+				Message: config.SNS.Message,
+			},
+			Err: config.Err,
+		}
+	}
+
+	return config
+}
+
+// publish message stored in Message under SNS struct to a SNS topic defined in EC2SPOT_SNS_TOPIC
 func publishSNS(c *Config) {
 
 	// AWS initialization
