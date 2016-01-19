@@ -16,18 +16,12 @@ This program should be able to run in both Linux and Windows platforms.
 
 [!] TODO
 
-* Generate builds for Linux and Windows
-* Write quick start guide for both Linux and Windows including IAM SNS Permissions for EC2 IAM Role
-
 # TODO
- * Read TimeThresholdTime from Config file instead of const for more flexibility
- * Create runCommand function
-   * Execute binary/script to be called once termination notice is known (i.e clean up script, deregister from Load balancer, save work, etc)
- * Create test for package
-   * Very likely to be a mock up server that will inject timestamp and return 404s
+* Create Golang package and organize files
+* Create test for package
 
 ## Improvements
- * Make comments 'godoc' compatible so it can generate HTML if needed
-
-### To fix
- * none yet :)
+* Make comments 'godoc' compatible so it can generate HTML if needed
+* Read TimeThresholdTime from Config file instead of const for more flexibility
+* Generate builds for Linux and Windows
+* Write quick start guide for both Linux and Windows including IAM SNS Permissions for EC2 IAM Role

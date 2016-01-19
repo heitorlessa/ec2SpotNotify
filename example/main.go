@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"log"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -40,8 +42,8 @@ func main() {
 		publishSNS(config)
 	}
 
-	log.Println("Doing something else...")
-	// do something about it ;)
+	// run command and its arguments via sh -c or powershell if specified
+	runCommand()
 }
 
 // Helper function to check whether a string is empty or not and it returns an erorr type to be evaluated against
@@ -124,5 +126,32 @@ func publishSNS(c *Config) {
 	if err != nil {
 		log.Fatal(err.Error())
 		return
+	}
+}
+
+// executes a given command defined in EC2SPOT_RUN_SCRIPT
+// Optional step so no need to include in Config
+func runCommand() {
+
+	script := os.Getenv("EC2SPOT_RUN_COMMAND")
+
+	if err := isEmpty(script); err != nil {
+		return
+	}
+
+	// uses powershell to execute a .ps1 script instead of CMD if it's Windows otherwise fall back to old and good sh -c that accepts both scripts and commands + arguments
+	if runtime.GOOS == "windows" {
+
+		if out, err := exec.Command("powershell.exe", "-File", script).Output(); err != nil {
+			fmt.Errorf("Error: %s", err)
+		} else {
+			log.Printf("Command result: %s", out)
+		}
+	}
+
+	if out, err := exec.Command("sh", "-c", script).Output(); err != nil {
+		fmt.Errorf("Error: ", err)
+	} else {
+		log.Printf("Command result: %s", out)
 	}
 }
