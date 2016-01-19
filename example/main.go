@@ -139,10 +139,10 @@ func runCommand() {
 		return
 	}
 
-	// uses powershell instead of CMD if it's Windows otherwise fall back to old and good sh -c
+	// uses powershell to execute a .ps1 script instead of CMD if it's Windows otherwise fall back to old and good sh -c that accepts both scripts and commands + arguments
 	if runtime.GOOS == "windows" {
 
-		if out, err := exec.Command("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", script).Output(); err != nil {
+		if out, err := exec.Command("powershell.exe", "-File", script).Output(); err != nil {
 			fmt.Errorf("Error: %s", err)
 		} else {
 			log.Printf("Command result: %s", out)
