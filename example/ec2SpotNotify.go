@@ -1,4 +1,4 @@
-package ec2spotnotify
+package ec2SpotNotify
 
 import (
 	"fmt"
