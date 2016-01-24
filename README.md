@@ -6,11 +6,11 @@ ec2SpotNotify is aimed to monitor EC2 Instance Metadata for EC2 Spot Termination
 
 **Env variables to be configured:**
 
-* **EC2SPOT_SNS_TOPIC**="<SNS Topic ARN (i.e. arn:aws:sns:<region>:<accountNumber>:<topicName>)>"
+* **EC2SPOT_SNS_TOPIC**="SNS Topic ARN (i.e. arn:aws:sns:region:accountNumber:topicName)"
     * ***Required***
-* **EC2SPOT_REGION**="<region (i.e. eu-west-1>"
+* **EC2SPOT_REGION**="region (i.e. eu-west-1"
     * ***Required***
-* EC2SPOT_RUN_COMMAND="date 
+* EC2SPOT_RUN_COMMAND="date" 
     * *Linux:* any command as a wrapper 'sh -c' is called
     * *Windows:* must be a Powershell script though
 
