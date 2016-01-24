@@ -9,14 +9,17 @@ import (
 )
 
 const (
-	RequestNotFoundError       string        = "404 Not Found"
-	RequestTimeoutError        string        = "i/o timeout"
-	RequestFound               string        = "200 OK"
-	RequestTimeoutSeconds      time.Duration = 150 * time.Millisecond
+	RequestNotFoundError  string        = "404 Not Found"
+	RequestTimeoutError   string        = "i/o timeout"
+	RequestFound          string        = "200 OK"
+	TimeFormat            string        = "2006-01-02T15:04:05Z07:00" // RFC 3339
+	TimeThresholdInterval time.Duration = 3 * time.Second
+)
+
+var (
 	URLTerminationNotification string        = "http://169.254.169.254/latest/meta-data/spot/termination-time"
 	URLInstanceDetails         string        = "http://169.254.169.254/latest/dynamic/instance-identity/document"
-	TimeFormat                 string        = "2006-01-02T15:04:05Z07:00" // RFC 3339
-	TimeThresholdInterval      time.Duration = 3 * time.Second
+	RequestTimeoutSeconds      time.Duration = 150 * time.Millisecond
 )
 
 // GetNotificationTime is a public function that returns a time based channel and error
