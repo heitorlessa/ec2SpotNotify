@@ -2,6 +2,7 @@ package ec2spotnotify
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"log"
 )
@@ -10,8 +11,7 @@ import (
 func PublishSNS(c *Config) {
 
 	// AWS initialization
-	config := aws.NewConfig().WithRegion(c.Region)
-	client := sns.New(config)
+	client := sns.New(session.New(), &aws.Config{Region: aws.String(c.Region)})
 
 	// SNS params prior to publish message to topic
 	// ref: http://docs.aws.amazon.com/sdk-for-go/api/service/sns/SNS.html#Publish-instance_method
