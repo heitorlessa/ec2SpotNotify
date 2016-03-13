@@ -1,19 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"github.com/heitorlessa/ec2spotnotify"
 	"log"
+
+	"github.com/heitorlessa/ec2spotnotify"
 )
 
 func main() {
 
-	config := ec2spotnotify.LoadConfig()
+	var c *ec2spotnotify.Config
+	config := c.LoadConfig()
 
 	log.Println("Looking up Instance Metadata....")
 	notification, instance, err := ec2spotnotify.GetNotificationTime()
 	if err != nil {
-		fmt.Errorf("Ooops! Something went terribly wrong: ", err)
+		log.Fatalln("Ooops! Something went terribly wrong: ", err)
 	} else {
 		config.SNS.Message = instance
 	}
