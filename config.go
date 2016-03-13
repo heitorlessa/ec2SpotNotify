@@ -7,16 +7,25 @@ import (
 	"strings"
 )
 
+// Config contains AWS Region, Error interface, SNS config and Instance endpoints
 type Config struct {
 	Region string
 	SNS
+    URL
 	Err error
 }
 
+// SNS properties required to be fullfiled within publish API
 type SNS struct {
 	Topic   string
 	Subject string
 	Message string
+}
+
+// URL defines Endpoints for both Instance metadata and termination notification timestamp
+type URL struct {
+    InstanceDetails string
+    InstanceTermination string
 }
 
 // Helper function to check whether a string is empty or not and it returns an erorr type to be evaluated against
@@ -34,42 +43,29 @@ func isEmpty(s string) (err error) {
 func LoadConfig() *Config {
 
 	config := &Config{
-		Region: "",
 		SNS: SNS{
-			Topic:   "",
 			Subject: "Spot Termination notification",
-			Message: "",
 		},
-		Err: nil,
 	}
 
-	log.Println("Gathering configuration....")
 	config.Region = os.Getenv("EC2SPOT_REGION")
 	config.SNS.Topic = os.Getenv("EC2SPOT_SNS_TOPIC")
+    
+    // optional as GetNotificationTime will use default if not informed
+	config.URL.InstanceDetails = os.Getenv("EC2SPOT_METADATA")
+	config.URL.InstanceTermination = os.Getenv("EC2SPOT_NOTIFICATION")
 
 	if err := isEmpty(config.Region); err != nil {
 		config.Err = fmt.Errorf("Region cannot be empty")
-		log.Println(config.Err)
 	}
 
 	if err := isEmpty(config.SNS.Topic); err != nil {
 		config.Err = fmt.Errorf("SNS Topic cannot be empty")
-		log.Println(config.Err)
 	}
 
 	if config.Err != nil {
 		log.Fatalf("Cowardly quitting due to: %s", config.Err)
-	} else {
-		return &Config{
-			Region: config.Region,
-			SNS: SNS{
-				Topic:   config.SNS.Topic,
-				Subject: config.SNS.Subject,
-				Message: config.SNS.Message,
-			},
-			Err: config.Err,
-		}
-	}
+	} 
 
 	return config
 }
