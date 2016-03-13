@@ -2,24 +2,24 @@ package ec2spotnotify
 
 import (
 	"fmt"
-	"github.com/parnurzeal/gorequest"
 	"log"
 	"os"
 	"time"
+
+	"github.com/parnurzeal/gorequest"
 )
 
 const (
-	RequestNotFoundError  string        = "404 Not Found"
-	RequestTimeoutError   string        = "i/o timeout"
-	RequestFound          string        = "200 OK"
-	TimeFormat            string        = "2006-01-02T15:04:05Z07:00" // RFC 3339
-	TimeThresholdInterval time.Duration = 3 * time.Second
+	requestNotFoundError                = "404 Not Found"
+	requestFound                        = "200 OK"
+	timeFormat                          = "2006-01-02T15:04:05Z07:00" // RFC 3339
+	timeThresholdInterval time.Duration = 3 * time.Second
 )
 
 var (
-	URLTerminationNotification string        = "http://169.254.169.254/latest/meta-data/spot/termination-time"
-	URLInstanceDetails         string        = "http://169.254.169.254/latest/dynamic/instance-identity/document"
-	RequestTimeoutSeconds      time.Duration = 150 * time.Millisecond
+	defaultUrlTerminationNotification               = "http://169.254.169.254/latest/meta-data/spot/termination-time"
+	defaultUrlInstanceDetails                       = "http://169.254.169.254/latest/dynamic/instance-identity/document"
+	RequestTimeoutSeconds             time.Duration = 150 * time.Millisecond
 )
 
 // GetNotificationTime is a public function that returns a time based channel and error
@@ -37,7 +37,7 @@ func GetNotificationTime() (chan time.Time, string, error) {
 	// Ticker from time package ensures it runs for X time until we stop it
 	// once done with processing, stop ticker and close channel to stop receiving messages
 	go func() {
-		ticker := time.NewTicker(TimeThresholdInterval)
+		ticker := time.NewTicker(timeThresholdInterval)
 		defer ticker.Stop()
 		defer close(notifyChan)
 		// listen to "ticks" and do something about it
@@ -68,13 +68,16 @@ func lookupInstanceMetadata() (timestamp time.Time, instance string, err error) 
 
 	// return a Zero timestamp if termination notification is not ready
 	// ref: ref: https://golang.org/pkg/time/#Time.IsZero
-	ZeroTimestamp, _ := time.Parse(TimeFormat, "")
+	ZeroTimestamp, _ := time.Parse(timeFormat, "")
+
+	var config Config
+	config.parseURLEndpoints()
 
 	// set shorter timeout as default is way too high for this operation
 	req := gorequest.
 		New().
 		Timeout(RequestTimeoutSeconds)
-	resp, body, errs := req.Get(URLTerminationNotification).End()
+	resp, body, errs := req.Get(config.URL.InstanceTermination).End()
 
 	// return error if request times out
 	if errs != nil {
@@ -87,15 +90,14 @@ func lookupInstanceMetadata() (timestamp time.Time, instance string, err error) 
 		New().
 		Timeout(RequestTimeoutSeconds)
 
-	_, instanceDetails, _ := req2.Get(URLInstanceDetails).End()
+	_, instanceDetails, _ := req2.Get(config.URL.InstanceMetadata).End()
 
 	switch resp.Status {
-	case RequestNotFoundError:
-		log.Println("[-] Not found yet....")
+	case requestNotFoundError:
 		return ZeroTimestamp, "", nil
 		fallthrough
-	case RequestFound:
-		notification, _ := time.Parse(TimeFormat, body)
+	case requestFound:
+		notification, _ := time.Parse(timeFormat, body)
 		return notification, instanceDetails, nil
 		fallthrough
 	default:
