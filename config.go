@@ -11,7 +11,7 @@ import (
 type Config struct {
 	Region string
 	SNS
-    URL
+	URL
 	Err error
 }
 
@@ -24,8 +24,8 @@ type SNS struct {
 
 // URL defines Endpoints for both Instance metadata and termination notification timestamp
 type URL struct {
-    InstanceDetails string
-    InstanceTermination string
+	InstanceMetadata    string
+	InstanceTermination string
 }
 
 // Helper function to check whether a string is empty or not and it returns an erorr type to be evaluated against
@@ -38,9 +38,26 @@ func isEmpty(s string) (err error) {
 	return
 }
 
+// Parses environment variables for both Metadata and Notification Endpoints and return default EC2 URLs if not set
+func (c *Config) parseURLEndpoints() {
+
+	c.URL.InstanceMetadata = os.Getenv("EC2SPOT_METADATA")
+	c.URL.InstanceTermination = os.Getenv("EC2SPOT_NOTIFICATION")
+
+	// set default EC2 Metadata Endpoint URL if env is not set
+	if err := isEmpty(c.URL.InstanceMetadata); err != nil {
+		c.URL.InstanceMetadata = defaultUrlInstanceDetails
+	}
+
+	if err := isEmpty(c.URL.InstanceTermination); err != nil {
+		c.URL.InstanceTermination = defaultUrlTerminationNotification
+	}
+
+}
+
 // LoadConfig looks up for EC2SPOT_REGION and EC2SPOT_SNS_TOPIC to ensure it can proceed without issues
 // Should these environment variables be empty it exists with a non-0 status
-func LoadConfig() *Config {
+func (c *Config) LoadConfig() *Config {
 
 	config := &Config{
 		SNS: SNS{
@@ -50,10 +67,6 @@ func LoadConfig() *Config {
 
 	config.Region = os.Getenv("EC2SPOT_REGION")
 	config.SNS.Topic = os.Getenv("EC2SPOT_SNS_TOPIC")
-    
-    // optional as GetNotificationTime will use default if not informed
-	config.URL.InstanceDetails = os.Getenv("EC2SPOT_METADATA")
-	config.URL.InstanceTermination = os.Getenv("EC2SPOT_NOTIFICATION")
 
 	if err := isEmpty(config.Region); err != nil {
 		config.Err = fmt.Errorf("Region cannot be empty")
@@ -65,7 +78,7 @@ func LoadConfig() *Config {
 
 	if config.Err != nil {
 		log.Fatalf("Cowardly quitting due to: %s", config.Err)
-	} 
+	}
 
 	return config
 }
