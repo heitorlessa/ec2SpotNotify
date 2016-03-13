@@ -15,13 +15,12 @@ func main() {
 	notification, instance, err := ec2spotnotify.GetNotificationTime()
 	if err != nil {
 		log.Fatalln("Ooops! Something went terribly wrong: ", err)
-	} else {
-		config.SNS.Message = instance
 	}
 
 	// as notification may take a while to be injected on EC2 Metadata - Read from channel provided with range
 	for timestamp := range notification {
 		log.Println("Received notification -> ", timestamp)
+		config.SNS.Message = instance
 		ec2spotnotify.PublishSNS(config)
 	}
 
