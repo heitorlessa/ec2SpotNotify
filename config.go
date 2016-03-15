@@ -24,7 +24,6 @@ type SNS struct {
 
 // URL defines Endpoints for both Instance metadata and termination notification timestamp
 type URL struct {
-	InstanceMetadata    string
 	InstanceTermination string
 }
 
@@ -38,16 +37,10 @@ func isEmpty(s string) (err error) {
 	return
 }
 
-// Parses environment variables for both Metadata and Notification Endpoints and return default EC2 URLs if not set
-func (c *Config) parseURLEndpoints() {
+// Parses environment variable for Notification Endpoint and return default EC2 URLs if not set
+func (c *Config) parseURLEndpoint() {
 
-	c.URL.InstanceMetadata = os.Getenv("EC2SPOT_METADATA")
 	c.URL.InstanceTermination = os.Getenv("EC2SPOT_NOTIFICATION")
-
-	// set default EC2 Metadata Endpoint URL if env is not set
-	if err := isEmpty(c.URL.InstanceMetadata); err != nil {
-		c.URL.InstanceMetadata = defaultUrlInstanceDetails
-	}
 
 	if err := isEmpty(c.URL.InstanceTermination); err != nil {
 		c.URL.InstanceTermination = defaultUrlTerminationNotification

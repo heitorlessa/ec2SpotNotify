@@ -17,18 +17,17 @@ const (
 )
 
 var (
-	defaultUrlTerminationNotification               = "http://169.254.169.254/latest/meta-data/spot/termination-time"
-	defaultUrlInstanceDetails                       = "http://169.254.169.254/latest/dynamic/instance-identity/document"
-	RequestTimeoutSeconds             time.Duration = 150 * time.Millisecond
+	defaultUrlTerminationNotification = "http://169.254.169.254/latest/meta-data/spot/termination-time"
+	RequestTimeoutSeconds             = 150 * time.Millisecond
 )
 
 // GetNotificationTime is a public function that returns a time based channel and error
 // Returned channel should be read to identify when Spot Instance will be terminated so actions can be taken
-func GetNotificationTime() (chan time.Time, string, error) {
+func GetNotificationTime() (chan time.Time, error) {
 	notifyChan := make(chan time.Time, 1)
 
 	// quick error check (timeout error if not an EC2 instance)
-	_, instanceDetails, err := lookupInstanceMetadata()
+	_, err := lookupInstanceMetadata()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,7 +42,7 @@ func GetNotificationTime() (chan time.Time, string, error) {
 		// listen to "ticks" and do something about it
 		for _ = range ticker.C {
 			// find out if data is available and store it on notification
-			notification, _, err := lookupInstanceMetadata()
+			notification, err := lookupInstanceMetadata()
 
 			if err != nil {
 				log.Fatal(err)
@@ -58,20 +57,20 @@ func GetNotificationTime() (chan time.Time, string, error) {
 		}
 	}()
 
-	return notifyChan, instanceDetails, nil
+	return notifyChan, nil
 }
 
 // lookupInstanceMetadata looks at EC2 Instance Metadata for URLTerminationNotification to extract when Spot Instance will be terminated
 // Returns timestamp and error so it can be worked by GetNotificationTime
 // While the instance is not marked for termination EC2 will return HTTP 404
-func lookupInstanceMetadata() (timestamp time.Time, instance string, err error) {
+func lookupInstanceMetadata() (timestamp time.Time, err error) {
 
 	// return a Zero timestamp if termination notification is not ready
 	// ref: ref: https://golang.org/pkg/time/#Time.IsZero
 	ZeroTimestamp, _ := time.Parse(timeFormat, "")
 
 	var config Config
-	config.parseURLEndpoints()
+	config.parseURLEndpoint()
 
 	// set shorter timeout as default is way too high for this operation
 	req := gorequest.
@@ -85,24 +84,24 @@ func lookupInstanceMetadata() (timestamp time.Time, instance string, err error) 
 		return
 	}
 
-	// make another request only for instance details (eg AZ, IP, AMI, etc)
-	req2 := gorequest.
-		New().
-		Timeout(RequestTimeoutSeconds)
-
-	_, instanceDetails, _ := req2.Get(config.URL.InstanceMetadata).End()
-
 	switch resp.Status {
 	case requestNotFoundError:
-		return ZeroTimestamp, "", nil
+		return ZeroTimestamp, nil
 		fallthrough
 	case requestFound:
 		notification, _ := time.Parse(timeFormat, body)
-		return notification, instanceDetails, nil
+		return notification, nil
 		fallthrough
 	default:
 		fmt.Errorf("[!] Received a non-compliant status: %s ", resp.Status)
-		return ZeroTimestamp, "", nil
+		return ZeroTimestamp, nil
 	}
 	return
 }
+
+/* remove instanceDetails and implement on the client side
+
+   - Remove extra URL struct for Metadata endpoint
+   - Use net/http instead of goRequest for better learning
+   - update both functions to not require extra string as receiver/return
+*/
