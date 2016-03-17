@@ -15,6 +15,7 @@ ec2SpotNotify is aimed to monitor EC2 Instance Metadata for EC2 Spot Termination
     * Used for testing/dev purposes in case you want to run it locally before using an EC2 instance
 
 Example as to how to consume this package can be found **[here](https://github.com/heitorlessa/ec2SpotNotify/blob/master/example/main.go)**
+Godoc available: https://godoc.org/github.com/heitorlessa/ec2SpotNotify
 
 ### Why yet another EC2 Spot SNS small program?
 
