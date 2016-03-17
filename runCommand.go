@@ -7,10 +7,18 @@ import (
 	"runtime"
 )
 
-// RunCommand executes a given command defined in EC2SPOT_RUN_COMMAND and returns an Error
-// It executes any powershell script via powershell.exe if underlying system is Windows
-// It runs any command including its arguments via 'sh -c'
-// OS detection relies on GOOS defined at compile time
+/*
+RunCommand executes a given command defined in EC2SPOT_RUN_COMMAND and returns an Error
+It executes any powershell script via powershell.exe if underlying system is Windows
+It runs any command including its arguments via 'sh -c'
+OS detection relies on GOOS defined at compile time
+
+    Example:
+
+        EC2SPOT_RUN_COMMAND="logger 'ec2spotnotify executed successfully at $(date)"
+        EC2SPOT_RUN_COMMAND="saveStateS3.sh"
+        EC2SPOT_RUN_COMMAND="deregisterELB.ps1"
+*/
 func RunCommand() (err error) {
 
 	script := os.Getenv("EC2SPOT_RUN_COMMAND")

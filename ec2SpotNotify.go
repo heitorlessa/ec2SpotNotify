@@ -42,19 +42,22 @@ var (
 	errEmptyCommand                   = errors.New("[!] Command is not defined. Please ensure 'EC2SPOT_RUN_COMMAND' env is not empty")
 )
 
-// GetNotificationTime returns a time based channel and Error
-// Returned channel should be read to identify when Spot Instance will be terminated so actions can be taken
-//
-//    Example:
-//
-// notification, err := ec2spotnotify.GetNotificationTime()
-//
-// if err != nil {
-//     log.Fatalf("[!] Cannot continue due to: %s", err)
-// }
-//  for timestamp := range notification {
-// 	    log.Printf("[*] Notification received at: %s ", timestamp)
-//  }
+/*
+GetNotificationTime returns a time based channel and Error
+Returned channel should be read to identify when Spot Instance will be terminated so actions can be taken
+
+    Example:
+
+        notification, err := ec2spotnotify.GetNotificationTime()
+
+        if err != nil {
+            log.Fatalf("[!] Cannot continue due to: %s", err)
+        }
+
+        for timestamp := range notification {
+ 	        log.Printf("[*] Notification received at: %s ", timestamp)
+        }
+*/
 func GetNotificationTime() (timestamp chan time.Time, err error) {
 	notifyChan := make(chan time.Time, 1)
 
@@ -65,9 +68,11 @@ func GetNotificationTime() (timestamp chan time.Time, err error) {
 		return nil, err
 	}
 
-	// run goroutine and keep it running until data is available
-	// Ticker from time package ensures it runs for X time until we stop it
-	// once done with processing, stops ticker and closes notify channel to stop receiving messages
+	/*
+		    run goroutine and keep it running until data is available
+		    Ticker from time package ensures it runs for X time until we stop it
+			once done with processing, stops ticker and closes notify channel to stop receiving messages
+	*/
 	go func() {
 		ticker := time.NewTicker(timeThresholdInterval)
 		defer ticker.Stop()
@@ -93,8 +98,10 @@ func GetNotificationTime() (timestamp chan time.Time, err error) {
 // lookupInstanceMetadata looks up at EC2 Instance Metadata and returns termination notification and Error
 func lookupInstanceMetadata() (timestamp time.Time, err error) {
 
-	// return a Zero timestamp if termination notification is not set
-	// ref: https://golang.org/pkg/time/#Time.IsZero
+	/*
+		    return a Zero timestamp if termination notification is not set
+			ref: https://golang.org/pkg/time/#Time.IsZero
+	*/
 	ZeroTimestamp, _ := time.Parse(timeFormat, "")
 
 	var config Config

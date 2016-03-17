@@ -35,8 +35,10 @@ func isEmpty(s string) (err error) {
 	return
 }
 
-// Parses environment variable for Notification Endpoint and return default EC2 URLs if not set
-// For custom endpoints (testing purposes) fill in EC2SPOT_NOTIFICATION_ENDPOINT
+/*
+Parses environment variable for Notification Endpoint and return default EC2 URLs if not set
+For custom endpoints (testing purposes) fill in EC2SPOT_NOTIFICATION_ENDPOINT
+*/
 func (c *Config) parseURLEndpoint() {
 
 	c.URL.InstanceTermination = os.Getenv("EC2SPOT_NOTIFICATION_ENDPOINT")
@@ -47,8 +49,10 @@ func (c *Config) parseURLEndpoint() {
 
 }
 
-// LoadConfig looks up for EC2SPOT_REGION and EC2SPOT_SNS_TOPIC to ensure it can proceed without issues
-// Should these environment variables be empty it exists with a non-0 status
+/*
+LoadConfig looks up for EC2SPOT_REGION and EC2SPOT_SNS_TOPIC to ensure it can proceed without issues
+Should these environment variables be empty it exists with a non-0 status
+*/
 func (c *Config) LoadConfig() {
 
 	c.Region = os.Getenv("EC2SPOT_REGION")
