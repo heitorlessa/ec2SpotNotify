@@ -8,10 +8,10 @@ ec2SpotNotify is aimed to monitor EC2 Instance Metadata for EC2 Spot Termination
     * ***Required***
 * **EC2SPOT_REGION**="region (i.e. eu-west-1"
     * ***Required***
-* EC2SPOT_RUN_COMMAND="logger 'Command ran successfully........................$(date)'" 
+* **EC2SPOT_RUN_COMMAND**="logger 'Command ran successfully........................$(date)'" 
     * *Linux:* any command or script as that can be invoked by 'sh -c' (e.g. EC2SPOT_RUN_COMMAND="saveStateS3.sh"
     * *Windows:* must be a Powershell script (e.g. EC2SPOT_RUN_COMMAND="deregisterELB.ps1"
-* EC2SPOT_NOTIFICATION_ENDPOINT="http://dockerhost/fakeTimestamp"
+* **EC2SPOT_NOTIFICATION_ENDPOINT**="http://dockerhost/fakeTimestamp"
     * Used for testing/dev purposes in case you want to run it locally before using an EC2 instance
 
 Example as to how to consume this package can be found  **[Here]**(https://github.com/heitorlessa/ec2SpotNotify/blob/master/example/main.go)
